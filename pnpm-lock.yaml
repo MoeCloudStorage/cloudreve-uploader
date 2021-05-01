@@ -2,6 +2,8 @@ dependencies:
   '@babel/runtime': 7.14.0
 devDependencies:
   '@babel/core': 7.14.0
+  '@babel/plugin-proposal-nullish-coalescing-operator': 7.13.8_@babel+core@7.14.0
+  '@babel/plugin-proposal-optional-chaining': 7.13.12_@babel+core@7.14.0
   '@babel/plugin-transform-runtime': 7.13.15_@babel+core@7.14.0
   '@rollup/plugin-babel': 5.3.0_@babel+core@7.14.0+rollup@2.46.0
   '@rollup/plugin-node-resolve': 11.2.1_rollup@2.46.0
@@ -144,6 +146,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-7FEjbrx5SL9cWvXioDbnlYTppcZGuCY6ow3/D5vMggb2Ywgu4dMrpTJX0JdQAIcRRUElOIxF3yEooa9gUb9ZbA==
+  /@babel/helper-skip-transparent-expression-wrappers/7.12.1:
+    dependencies:
+      '@babel/types': 7.14.0
+    dev: true
+    resolution:
+      integrity: sha512-Mf5AUuhG1/OCChOJ/HcADmvcHM42WJockombn8ATJG3OnyiSxBK/Mm5x78BQWvmtXZKHgbjdGL2kin/HOLlZGA==
   /@babel/helper-split-export-declaration/7.12.13:
     dependencies:
       '@babel/types': 7.14.0
@@ -181,6 +189,45 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-AHbfoxesfBALg33idaTBVUkLnfXtsgvJREf93p4p0Lwsz4ppfE7g1tpEXVm4vrxUcH4DVhAa9Z1m1zqf9WUC7Q==
+  /@babel/plugin-proposal-nullish-coalescing-operator/7.13.8_@babel+core@7.14.0:
+    dependencies:
+      '@babel/core': 7.14.0
+      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3_@babel+core@7.14.0
+    dev: true
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    resolution:
+      integrity: sha512-iePlDPBn//UhxExyS9KyeYU7RM9WScAG+D3Hhno0PLJebAEpDZMocbDe64eqynhNAnwz/vZoL/q/QB2T1OH39A==
+  /@babel/plugin-proposal-optional-chaining/7.13.12_@babel+core@7.14.0:
+    dependencies:
+      '@babel/core': 7.14.0
+      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-skip-transparent-expression-wrappers': 7.12.1
+      '@babel/plugin-syntax-optional-chaining': 7.8.3_@babel+core@7.14.0
+    dev: true
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    resolution:
+      integrity: sha512-fcEdKOkIB7Tf4IxrgEVeFC4zeJSTr78no9wTdBuZZbqF64kzllU0ybo2zrzm7gUQfxGhBgq4E39oRs8Zx/RMYQ==
+  /@babel/plugin-syntax-nullish-coalescing-operator/7.8.3_@babel+core@7.14.0:
+    dependencies:
+      '@babel/core': 7.14.0
+      '@babel/helper-plugin-utils': 7.13.0
+    dev: true
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    resolution:
+      integrity: sha512-aSff4zPII1u2QD7y+F8oDsz19ew4IGEJg9SVW+bqwpwtfFleiQDMdzA/R+UlWDzfnHFCxxleFT0PMIrR36XLNQ==
+  /@babel/plugin-syntax-optional-chaining/7.8.3_@babel+core@7.14.0:
+    dependencies:
+      '@babel/core': 7.14.0
+      '@babel/helper-plugin-utils': 7.13.0
+    dev: true
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    resolution:
+      integrity: sha512-KoK9ErH1MBlCPxV0VANkXW2/dw4vlbGDrFgz8bmUsBGYkFRcbRwMh6cIJubdPrkxRwuGdtCk0v/wPTKbQgBjkg==
   /@babel/plugin-transform-runtime/7.13.15_@babel+core@7.14.0:
     dependencies:
       '@babel/core': 7.14.0
@@ -835,6 +882,8 @@ packages:
       integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==
 specifiers:
   '@babel/core': ^7.14.0
+  '@babel/plugin-proposal-nullish-coalescing-operator': ^7.13.8
+  '@babel/plugin-proposal-optional-chaining': ^7.13.12
   '@babel/plugin-transform-runtime': ^7.13.15
   '@babel/runtime': ^7.14.0
   '@rollup/plugin-babel': ^5.3.0
