@@ -18,13 +18,38 @@ export default class Local extends Base {
       method: "POST",
       headers,
       body: this.file ?? null,
+      onProgress: this.updateProgress,
     });
 
-    this.logger.info(response);
+    this.logger.info("response", response, this.file);
 
     if (response.code === 0) {
+      this.complete();
     } else {
       throw new Error(response.msg);
     }
+  }
+
+  private updateProgress = (
+    event: ProgressEvent<XMLHttpRequestEventTarget>
+  ) => {
+    if (event.lengthComputable && this.onProgress) {
+      this.progress = {
+        total: event.total + 1,
+        loaded: event.loaded,
+        percent: ((event.loaded + 1) / event.total) * 100,
+      };
+      this.onProgress(this.progress);
+    }
+  };
+
+  private complete() {
+    this.progress = {
+      total: this.file?.size!!,
+      loaded: this.file?.size!!,
+      percent: 100,
+    };
+    if (this.onProgress) this.onProgress(this.progress);
+    return;
   }
 }

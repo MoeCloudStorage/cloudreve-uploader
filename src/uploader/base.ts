@@ -1,11 +1,23 @@
 import { Options } from "./index";
 import Logger from "../logger";
 
+export interface Progress {
+  total: number;
+  loaded: number;
+  percent?: number;
+}
+
+export type OnProgress = (progress: Progress) => void;
+
+export type OnComplete = () => void;
+
 export default abstract class Base {
   protected options: Options;
   protected logger: Logger;
   protected file?: File;
-  protected abort = false;
+  protected progress?: Progress;
+  protected onProgress?: OnProgress;
+  protected onComplete?: OnComplete;
   protected abstract start(): Promise<void>;
 
   constructor(options: Options) {
@@ -37,14 +49,16 @@ export default abstract class Base {
     }
   };
 
-  uploadFile = async () => {
-    this.abort = false;
+  uploadFile = async (onProgress: OnProgress, onComplete: OnComplete) => {
+    this.onProgress = onProgress;
+    this.onComplete = onComplete;
+
     try {
       this.check();
       this.logger.info("Upload start", this.file);
-      const result = await this.start();
-
-      this.logger.info(result);
+      await this.start();
+      this.logger.info("Upload complete", this.file);
+      this.onComplete();
     } catch (err) {
       this.logger.error(err);
       throw err;
@@ -65,6 +79,7 @@ export default abstract class Base {
           this.file = files.item(0)!!;
         }
 
+        this.logger.info("file", this.file);
         resolve(this);
       };
 

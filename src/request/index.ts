@@ -1,4 +1,8 @@
 export interface RequestOptions {
+  onProgress: (
+    this: XMLHttpRequestUpload,
+    ev: ProgressEvent<XMLHttpRequestEventTarget>
+  ) => any;
   method: "GET" | "POST";
   headers?: [string, string][] | null;
   body: BodyInit | File | null;
@@ -17,6 +21,8 @@ export function request<T = any>(
       const [key, value] = header;
       xhr.setRequestHeader(key, value);
     });
+
+    xhr.upload.addEventListener("progress", options.onProgress);
 
     xhr.onreadystatechange = () => {
       const responseText = xhr.responseText;
