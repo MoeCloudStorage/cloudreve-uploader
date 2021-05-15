@@ -1,3 +1,5 @@
+import axios, { AxiosRequestConfig } from "axios";
+
 export interface RequestOptions {
   onProgress: (
     this: XMLHttpRequestUpload,
@@ -37,4 +39,8 @@ export function request<T = any>(
 
     xhr.send(options.body);
   });
+}
+
+export function requestAPI<T = any>(url: string, config?: AxiosRequestConfig) {
+  return axios.request<T>({ ...config, url });
 }

@@ -12,9 +12,9 @@ export type OnProgress = (progress: Progress) => void;
 export type OnComplete = () => void;
 
 export default abstract class Base {
+  public file?: File;
   protected options: Options;
   protected logger: Logger;
-  protected file?: File;
   protected progress?: Progress;
   protected onProgress?: OnProgress;
   protected onComplete?: OnComplete;
