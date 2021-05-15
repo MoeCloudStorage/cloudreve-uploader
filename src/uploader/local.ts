@@ -14,12 +14,12 @@ export default class Local extends Base {
       ["x-path", encodeURIComponent(this.options.path)],
     ];
 
-    const response = await request<Res>("/api/v3/file/upload", {
+    const response = (await request<Res>("/api/v3/file/upload", {
       method: "POST",
       headers,
       body: this.file ?? null,
       onProgress: this.updateProgress,
-    });
+    })) as Res;
 
     this.logger.info("response", response, this.file);
 

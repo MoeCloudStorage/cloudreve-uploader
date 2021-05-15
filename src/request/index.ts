@@ -5,16 +5,19 @@ export interface RequestOptions {
     this: XMLHttpRequestUpload,
     ev: ProgressEvent<XMLHttpRequestEventTarget>
   ) => any;
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PUT";
   headers?: [string, string][] | null;
   body: BodyInit | File | null;
+  returnXHR?: boolean;
 }
 
-export function request<T = any>(
+export type Request<T> = T | XMLHttpRequest;
+
+export function request<T = any, R = Request<T>>(
   url: string,
   options: RequestOptions
-): Promise<T> {
-  return new Promise((resolve, reject) => {
+): Promise<R> {
+  return new Promise<R>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
     xhr.open(options.method, url, true);
@@ -29,11 +32,14 @@ export function request<T = any>(
     xhr.onreadystatechange = () => {
       const responseText = xhr.responseText;
       if (xhr.readyState !== 4) return;
-
-      try {
-        resolve(JSON.parse(responseText));
-      } catch (e) {
-        reject(e);
+      if (options.returnXHR === true) {
+        resolve(xhr as any);
+      } else {
+        try {
+          resolve(JSON.parse(responseText));
+        } catch (e) {
+          reject(e);
+        }
       }
     };
 
