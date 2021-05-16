@@ -1,21 +1,44 @@
-import { Options } from "./index";
+import { Options, PolicyType } from "./index";
 import Logger from "../logger";
 
 export interface Progress {
   total: number;
   loaded: number;
   percent?: number;
+  speed?: number;
+  lastTime?: number;
+  lastLoaded?: number;
 }
 
 export type OnProgress = (progress: Progress) => void;
 
 export type OnComplete = () => void;
 
+export interface CredentialRes {
+  code: number;
+  data: CredentialData;
+  msg: string;
+}
+
+export interface CredentialData {
+  token: string;
+  policy: PolicyType;
+  path: string;
+  ak: string;
+}
+
 export default abstract class Base {
   public file?: File;
   protected options: Options;
   protected logger: Logger;
-  protected progress?: Progress;
+  protected progress: Progress = {
+    loaded: 0,
+    total: 0,
+    percent: 0,
+    speed: 0,
+    lastLoaded: 0,
+    lastTime: new Date().getTime(),
+  };
   protected onProgress?: OnProgress;
   protected onComplete?: OnComplete;
   protected abstract start(): Promise<void>;
@@ -88,4 +111,16 @@ export default abstract class Base {
       document.getElementById("upload-button")?.click();
     });
   };
+
+  protected calcSpeed() {
+    const nowTime = new Date().getTime();
+    const lastTime = this.progress.lastTime!!;
+    const elapsed = (nowTime - lastTime) / 1000;
+
+    const uploadedBytes = this.progress.loaded!! - this.progress.lastLoaded!!;
+
+    this.progress.speed = elapsed ? uploadedBytes / elapsed : 0;
+    this.progress.lastTime = nowTime;
+    this.progress.lastLoaded = this.progress.loaded;
+  }
 }

@@ -1,28 +1,16 @@
-import Base from "./base";
+import Base, { CredentialRes } from "./base";
 import { request, requestAPI } from "../request";
 import { Uploader } from "./index";
 import { MB, sliceFileChunks } from "../utils/file";
 
 const noop = () => {};
 
-export interface CredentialRes {
-  code: number;
-  data: CredentialData;
-  msg: string;
-}
-
-export interface CredentialData {
-  token: string;
-  policy: string;
-  path: string;
-  ak: string;
-}
-
 const chunkSize = 100 * MB;
 
 export default class OneDrive extends Base {
   private chunks: Blob[] = [];
   private response: any = {};
+  private loadedChunksCount: number = 0;
 
   protected async requestCredential() {
     const query: Record<string, string> = {
@@ -75,6 +63,8 @@ export default class OneDrive extends Base {
     if (callbackRes.data.code !== 0) {
       throw new Error("callback error: " + callbackRes.data.msg);
     }
+
+    this.complete();
   }
 
   private async uploadChunk(index: number, chunk: Blob, uploadURL: string) {
@@ -101,7 +91,7 @@ export default class OneDrive extends Base {
       method: "PUT",
       headers,
       body: chunk ?? null,
-      onProgress: (evt) => console.log(evt),
+      onProgress: this.updateProgress,
       returnXHR: true,
     })) as XMLHttpRequest;
 
@@ -111,5 +101,38 @@ export default class OneDrive extends Base {
     } else {
       throw new Error("upload error: " + xhr.status + " " + xhr.responseText);
     }
+  }
+
+  private updateProgress = (
+    event: ProgressEvent<XMLHttpRequestEventTarget>
+  ) => {
+    if (event.lengthComputable && this.onProgress) {
+      const total = this.file?.size!! + 1;
+      const loaded = this.loadedChunksCount * chunkSize + event.loaded;
+      const percent = (loaded / total) * 100;
+      this.progress = {
+        ...this.progress,
+        total,
+        loaded,
+        percent,
+      };
+
+      this.calcSpeed();
+      if (event.total == event.loaded) {
+        this.loadedChunksCount += 1;
+      }
+      this.onProgress(this.progress);
+    }
+  };
+
+  private complete() {
+    this.progress = {
+      ...this.progress,
+      total: this.file?.size!!,
+      loaded: this.file?.size!!,
+      percent: 100,
+    };
+    if (this.onProgress) this.onProgress(this.progress);
+    return;
   }
 }
