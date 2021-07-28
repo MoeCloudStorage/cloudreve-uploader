@@ -1,5 +1,5 @@
 import Base from "./base";
-import { request } from "../request";
+import { request, ResponseWithXHR } from "../request";
 
 interface Res {
   code: number;
@@ -7,6 +7,7 @@ interface Res {
 }
 
 export default class Local extends Base {
+  private xhr?: XMLHttpRequest;
   protected async start(): Promise<void> {
     const headers: Array<[string, string]> = [
       ["content-type", "application/octet-stream"],
@@ -19,15 +20,20 @@ export default class Local extends Base {
       headers,
       body: this.file ?? null,
       onProgress: this.updateProgress,
-    })) as Res;
+    })) as ResponseWithXHR<Res>;
 
     this.logger.info("response", response, this.file);
 
+    this.xhr = response.xhr;
     if (response.code === 0) {
       this.complete();
     } else {
       throw new Error(response.msg);
     }
+  }
+
+  cancel() {
+    this.xhr?.abort();
   }
 
   private updateProgress = (

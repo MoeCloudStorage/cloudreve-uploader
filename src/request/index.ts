@@ -1,5 +1,8 @@
 import axios, { AxiosRequestConfig } from "axios";
 
+export const { CancelToken } = axios;
+export { CancelToken as CancelTokenType, CancelTokenSource } from "axios";
+
 export interface RequestOptions {
   onProgress: (
     this: XMLHttpRequestUpload,
@@ -11,7 +14,11 @@ export interface RequestOptions {
   returnXHR?: boolean;
 }
 
-export type Request<T> = T | XMLHttpRequest;
+export type ResponseWithXHR<R = any> = R & {
+  xhr: XMLHttpRequest;
+};
+
+export type Request<T> = ResponseWithXHR<T> | XMLHttpRequest;
 
 export function request<T = any, R = Request<T>>(
   url: string,
@@ -36,7 +43,7 @@ export function request<T = any, R = Request<T>>(
         resolve(xhr as any);
       } else {
         try {
-          resolve(JSON.parse(responseText));
+          resolve({ ...JSON.parse(responseText), xhr });
         } catch (e) {
           reject(e);
         }

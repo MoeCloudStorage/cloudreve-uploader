@@ -1,5 +1,10 @@
 import Base, { CredentialRes } from "./base";
-import { request, requestAPI } from "../request";
+import {
+  CancelToken,
+  CancelTokenSource,
+  request,
+  requestAPI,
+} from "../request";
 import { Uploader } from "./index";
 import { MB, sliceFileChunks } from "../utils/file";
 
@@ -11,6 +16,9 @@ export default class OneDrive extends Base {
   private chunks: Blob[] = [];
   private response: any = {};
   private loadedChunksCount: number = 0;
+  private cancelToken: CancelTokenSource = CancelToken.source();
+  private aborted: boolean = false;
+  private req?: XMLHttpRequest;
 
   protected async requestCredential() {
     const query: Record<string, string> = {
@@ -21,7 +29,10 @@ export default class OneDrive extends Base {
     };
 
     const res = await requestAPI<CredentialRes>(
-      `/api/v3/file/upload/credential?${new URLSearchParams(query).toString()}`
+      `/api/v3/file/upload/credential?${new URLSearchParams(query).toString()}`,
+      {
+        cancelToken: this.cancelToken.token,
+      }
     );
     if (res.data.code !== 0) {
       throw new Error("requestCredential error: " + res.data);
@@ -51,13 +62,22 @@ export default class OneDrive extends Base {
     this.chunks = chunks;
     this.logger.info(chunks, chunkSize);
 
+    this.cancelToken.token.promise.then(() => {
+      if (this.aborted) return;
+
+      this.aborted = true;
+      this.req?.abort();
+    });
+
     for (let i = 0; i < chunks.length; i++) {
+      if (this.aborted) return;
       await this.uploadChunk(i, chunks[i], credential.data.policy);
     }
 
     const callbackRes = await requestAPI(credential.data.token, {
       method: "POST",
       data: this.response,
+      cancelToken: this.cancelToken.token,
     });
 
     if (callbackRes.data.code !== 0) {
@@ -94,6 +114,8 @@ export default class OneDrive extends Base {
       onProgress: this.updateProgress,
       returnXHR: true,
     })) as XMLHttpRequest;
+
+    this.req = xhr;
 
     if (xhr.status === 201 || xhr.status === 202) {
       if (xhr.responseText) this.response = JSON.parse(xhr.responseText);
@@ -134,5 +156,9 @@ export default class OneDrive extends Base {
     };
     if (this.onProgress) this.onProgress(this.progress);
     return;
+  }
+
+  cancel(): void {
+    this.cancelToken.cancel();
   }
 }
