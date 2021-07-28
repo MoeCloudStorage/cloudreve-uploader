@@ -1,5 +1,6 @@
-import { Options, PolicyType } from "./index";
+import { Options, PolicyType, uploaders } from "./index";
 import Logger from "../logger";
+import { check } from "./checker";
 
 export interface Progress {
   total: number;
@@ -27,6 +28,8 @@ export interface CredentialData {
   ak: string;
 }
 
+let uploaderId = 0;
+
 export default abstract class Base {
   public file?: File;
   protected options: Options;
@@ -42,37 +45,29 @@ export default abstract class Base {
   protected onProgress?: OnProgress;
   protected onComplete?: OnComplete;
   protected abstract start(): Promise<void>;
+  public abstract cancel(): void;
+
+  public id = ++uploaderId;
 
   constructor(options: Options) {
     this.options = options;
-    this.logger = new Logger(options.logLevel);
+
+    uploaders.set(this.id, this);
+    this.logger = new Logger(options.logLevel, this.id);
 
     this.logger.info("options: ", options);
   }
 
-  check = () => {
-    if (this.options.filters.allowedType.length !== 0) {
-      const ext = this.file?.name.split(".").pop();
-      if (ext === null || !ext) throw new Error("您当前的用户组不可上传此文件");
-      if (!this.options.filters.allowedType.includes(ext))
-        throw new Error("您当前的用户组不可上传此文件");
-    }
+  async setPath(path: string) {
+    this.options.path = path;
+    return this;
+  }
 
-    if (this.options.maxFileSize !== "0.00mb") {
-      const maxFileSize = parseFloat(
-        this.options.maxFileSize.replace("mb", "")
-      );
+  check() {
+    check(this.file ?? null, this.options);
+  }
 
-      const fileSize = this.file?.size!! / (1024 * 1024);
-
-      if (fileSize > maxFileSize)
-        throw new Error(
-          `文件过大，您当前用户组最多可上传 ${maxFileSize} mb的文件`
-        );
-    }
-  };
-
-  uploadFile = async (onProgress: OnProgress, onComplete: OnComplete) => {
+  upload = async (onProgress: OnProgress, onComplete: OnComplete) => {
     this.onProgress = onProgress;
     this.onComplete = onComplete;
 
@@ -86,30 +81,6 @@ export default abstract class Base {
       this.logger.error(err);
       throw err;
     }
-  };
-
-  pickFile = (): Promise<Base> => {
-    return new Promise((resolve) => {
-      document.getElementById("upload-button")?.remove();
-
-      const element = document.createElement("input");
-      element.id = "upload-button";
-      element.type = "file";
-      element.hidden = true;
-      element.onchange = (event) => {
-        const files = (event?.target as HTMLInputElement).files;
-        if (files != null && files.length > 0) {
-          this.file = files.item(0)!!;
-        }
-
-        this.logger.info("file", this.file);
-        resolve(this);
-      };
-
-      document.body.appendChild(element);
-
-      document.getElementById("upload-button")?.click();
-    });
   };
 
   protected calcSpeed() {
