@@ -1,5 +1,6 @@
 import Base, { CredentialRes } from "./base";
-import { request, requestAPI } from "../request";
+import { CancelToken, request, requestAPI } from "../request";
+import { CancelTokenSource } from "axios";
 
 interface Res {
   code: number;
@@ -7,6 +8,16 @@ interface Res {
 }
 
 export default class Remote extends Base {
+  // 用于取消请求
+  private cancelToken: CancelTokenSource = CancelToken.source();
+  // 存放上传 XHR
+  private xhr?: XMLHttpRequest;
+
+  cancel() {
+    this.cancelToken.cancel();
+  }
+
+  // 从机上传前须请求后端获得上传令牌
   protected async requestCredential() {
     const query: Record<string, string> = {
       path: this.options.path,
@@ -16,7 +27,10 @@ export default class Remote extends Base {
     };
 
     const res = await requestAPI<CredentialRes>(
-      `/api/v3/file/upload/credential?${new URLSearchParams(query).toString()}`
+      `/api/v3/file/upload/credential?${new URLSearchParams(query).toString()}`,
+      {
+        cancelToken: this.cancelToken.token,
+      }
     );
     if (res.data.code !== 0) {
       throw new Error("requestCredential error: " + res.data);
@@ -29,6 +43,7 @@ export default class Remote extends Base {
     const credential = await this.requestCredential();
     this.logger.info(credential);
 
+    // 上传必须设置的 header
     const headers: Array<[string, string]> = [
       ["content-type", "application/octet-stream"],
       ["authorization", credential.data.token],
@@ -37,13 +52,22 @@ export default class Remote extends Base {
       ["x-policy", credential.data.policy],
     ];
 
-    const response = (await request<Res>(this.options.uploadURL, {
+    this.cancelToken.token.promise.then(() => {
+      // 取消当前上传
+      this.xhr?.abort();
+
+      // throw 阻断后面运行
+      throw new Error("aborted!!");
+    });
+
+    const response = await request<Res>(this.options.uploadURL, {
       method: "POST",
       headers,
       body: this.file ?? null,
       onProgress: this.updateProgress,
-    })) as Res;
+    });
 
+    this.xhr = response.xhr;
     this.logger.info("response", response, this.file);
 
     if (response.code === 0) {

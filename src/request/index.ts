@@ -11,16 +11,18 @@ export interface RequestOptions {
   method: "GET" | "POST" | "PUT";
   headers?: [string, string][] | null;
   body: BodyInit | File | null;
-  returnXHR?: boolean;
 }
 
-export type ResponseWithXHR<R = any> = R & {
-  xhr: XMLHttpRequest;
-};
+export type ResponseWithXHR<R> = R extends Record<string, any>
+  ? {
+      xhr: XMLHttpRequest;
+    } & R
+  : {
+      xhr: XMLHttpRequest;
+      [key: string]: any;
+    };
 
-export type Request<T> = ResponseWithXHR<T> | XMLHttpRequest;
-
-export function request<T = any, R = Request<T>>(
+export function request<T, R = ResponseWithXHR<T>>(
   url: string,
   options: RequestOptions
 ): Promise<R> {
@@ -39,14 +41,10 @@ export function request<T = any, R = Request<T>>(
     xhr.onreadystatechange = () => {
       const responseText = xhr.responseText;
       if (xhr.readyState !== 4) return;
-      if (options.returnXHR === true) {
-        resolve(xhr as any);
-      } else {
-        try {
-          resolve({ ...JSON.parse(responseText), xhr });
-        } catch (e) {
-          reject(e);
-        }
+      try {
+        resolve({ ...JSON.parse(responseText), xhr });
+      } catch (e) {
+        reject(e);
       }
     };
 

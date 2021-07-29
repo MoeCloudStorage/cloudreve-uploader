@@ -4,6 +4,7 @@ interface Checker {
   (file: File | null, options: Options): void;
 }
 
+// 检查器
 const checkers: Array<Checker> = [
   function checkExt(file: File | null, options: Options) {
     const allowedType = options.filters.allowedType;
@@ -19,6 +20,7 @@ const checkers: Array<Checker> = [
     if (options.maxFileSize !== "0.00mb") {
       const maxFileSize = parseFloat(options.maxFileSize.replace("mb", ""));
 
+      // 转 mb
       const fileSize = file?.size!! / (1024 * 1024);
 
       if (fileSize > maxFileSize)
@@ -29,6 +31,9 @@ const checkers: Array<Checker> = [
   },
 ];
 
+/* 将每个 Checker 执行
+   失败返回 Error
+ */
 export function check(file: File | null, options: Options) {
   checkers.forEach((c) => c(file, options));
 }

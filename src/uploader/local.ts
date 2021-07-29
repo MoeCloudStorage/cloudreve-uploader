@@ -1,5 +1,5 @@
 import Base from "./base";
-import { request, ResponseWithXHR } from "../request";
+import { request } from "../request";
 
 interface Res {
   code: number;
@@ -7,33 +7,38 @@ interface Res {
 }
 
 export default class Local extends Base {
+  // 存放上传 XHR
   private xhr?: XMLHttpRequest;
+
+  cancel() {
+    // 终止上传
+    this.xhr?.abort();
+  }
+
   protected async start(): Promise<void> {
+    // 上传必须设置的 header
     const headers: Array<[string, string]> = [
       ["content-type", "application/octet-stream"],
       ["x-filename", this.file?.name!!],
       ["x-path", encodeURIComponent(this.options.path)],
     ];
 
-    const response = (await request<Res>("/api/v3/file/upload", {
+    const response = await request<Res>("/api/v3/file/upload", {
       method: "POST",
       headers,
       body: this.file ?? null,
       onProgress: this.updateProgress,
-    })) as ResponseWithXHR<Res>;
+    });
 
     this.logger.info("response", response, this.file);
 
     this.xhr = response.xhr;
     if (response.code === 0) {
+      // 完成上传
       this.complete();
     } else {
       throw new Error(response.msg);
     }
-  }
-
-  cancel() {
-    this.xhr?.abort();
   }
 
   private updateProgress = (
@@ -41,6 +46,7 @@ export default class Local extends Base {
   ) => {
     if (event.lengthComputable && this.onProgress) {
       this.progress = {
+        // +1 为了避免没有完毕就 100%
         total: event.total + 1,
         loaded: event.loaded,
         percent: ((event.loaded + 1) / event.total) * 100,
