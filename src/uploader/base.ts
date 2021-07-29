@@ -1,4 +1,4 @@
-import { Options, PolicyType, uploaders } from "./index";
+import { Options, PolicyType } from "./index";
 import Logger from "../logger";
 import { check } from "./checker";
 
@@ -28,8 +28,6 @@ export interface CredentialData {
   ak: string;
 }
 
-let uploaderId = 0;
-
 export default abstract class Base {
   public file?: File;
   protected options: Options;
@@ -47,13 +45,10 @@ export default abstract class Base {
   protected abstract start(): Promise<void>;
   public abstract cancel(): void;
 
-  public id = ++uploaderId;
-
-  constructor(options: Options) {
+  constructor(public id: number, options: Options) {
     this.options = options;
 
-    uploaders.set(this.id, this);
-    this.logger = new Logger(options.logLevel, this.id);
+    this.logger = new Logger(options.logLevel, id);
 
     this.logger.info("options: ", options);
   }
