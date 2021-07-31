@@ -1,8 +1,9 @@
 import Local from "./local";
-import Base from "./base";
-import { LogLevel } from "../logger";
+import Base, {OnComplete, OnProgress} from "./base";
+import {LogLevel} from "../logger";
 import OneDrive from "./onedrive";
 import Remote from "./remote";
+import {TaskQueue} from "../utils/taskqueue";
 
 // 目前支持的策略类型
 export type PolicyType = "local" | "remote" | "onedrive";
@@ -86,5 +87,17 @@ export default class CloudreveUploader {
     });
   }
 
-  batchUpload() {}
+  batchUpload(onProgress: OnProgress, onComplete: OnComplete) {
+    const taskQueue = new TaskQueue(
+      (uploader: Base) => uploader.upload(onProgress, onComplete),
+      5
+    );
+
+    const uploads: Array<Promise<void>> = [];
+    this.uploaders.forEach((uploader) =>
+      uploads.push(taskQueue.enqueue(uploader))
+    );
+
+    return Promise.all(uploads);
+  }
 }
