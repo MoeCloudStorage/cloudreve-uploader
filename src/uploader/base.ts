@@ -18,10 +18,10 @@ export interface Progress {
 }
 
 // 更新进度
-export type OnProgress = (progress: Progress) => void;
+export type OnProgress = (progress: Progress, uploaderId: number) => void;
 
 // 完成
-export type OnComplete = () => void;
+export type OnComplete = (uploaderId: number) => void;
 
 // 上传凭证
 export interface CredentialRes {
@@ -96,7 +96,7 @@ export default abstract class Base {
       this.logger.info("Upload start", this.file);
       await this.start();
       this.logger.info("Upload complete", this.file);
-      this.onComplete();
+      this.onComplete(this.id);
     } catch (err) {
       this.logger.error(err);
       throw err;

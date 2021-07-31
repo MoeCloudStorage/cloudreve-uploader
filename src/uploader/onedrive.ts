@@ -63,11 +63,15 @@ export default class OneDrive extends Base {
     if (this.file?.size!! < 4 * MB) {
       this.localUploader = this.uploader.dispatchUploader(
         "local",
-        this.options
+        this.options,
+        false
       ) as Local;
       this.localUploader.file = this.file;
 
-      await this.localUploader.upload(this.onProgress!!, this.onComplete!!);
+      await this.localUploader.upload(
+        (progress, _) => this.onProgress!!(progress, this.id),
+        (_) => this.onComplete!!(this.id)
+      );
 
       this.onProgress = noop;
       this.onComplete = noop;
@@ -176,7 +180,7 @@ export default class OneDrive extends Base {
       if (event.total == event.loaded) {
         this.loadedChunksCount += 1;
       }
-      this.onProgress(this.progress);
+      this.onProgress(this.progress, this.id);
     }
   };
 
@@ -187,7 +191,7 @@ export default class OneDrive extends Base {
       loaded: this.file?.size!!,
       percent: 100,
     };
-    if (this.onProgress) this.onProgress(this.progress);
+    if (this.onProgress) this.onProgress(this.progress, this.id);
     return;
   }
 }

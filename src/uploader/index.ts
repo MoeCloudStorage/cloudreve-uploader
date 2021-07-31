@@ -31,8 +31,14 @@ export default class CloudreveUploader {
   uploaders = new Map<number, Base>();
   uploaderId = 0;
 
-  // 分配 Uploader
-  dispatchUploader(policyType: PolicyType, options: Options): Base {
+  /* 分配 Uploader
+   * push 是否将此 Uploader 放进 Map
+   */
+  dispatchUploader(
+    policyType: PolicyType,
+    options: Options,
+    push: boolean = true
+  ): Base {
     let uploader: Base;
     const id = ++this.uploaderId;
 
@@ -50,7 +56,7 @@ export default class CloudreveUploader {
         throw Error("Unknown policy type!!");
     }
 
-    this.uploaders.set(id, uploader);
+    if (push) this.uploaders.set(id, uploader);
     return uploader;
   }
 
@@ -79,4 +85,6 @@ export default class CloudreveUploader {
       document.getElementById("upload-button")?.click();
     });
   }
+
+  batchUpload() {}
 }

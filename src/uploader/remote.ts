@@ -92,7 +92,7 @@ export default class Remote extends Base {
       };
 
       this.calcSpeed();
-      this.onProgress(this.progress);
+      this.onProgress(this.progress, this.id);
     }
   };
 
@@ -103,7 +103,7 @@ export default class Remote extends Base {
       loaded: this.file?.size!!,
       percent: 100,
     };
-    if (this.onProgress) this.onProgress(this.progress);
+    if (this.onProgress) this.onProgress(this.progress, this.id);
     return;
   }
 }
