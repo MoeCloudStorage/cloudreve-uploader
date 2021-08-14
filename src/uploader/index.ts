@@ -94,9 +94,11 @@ export default class CloudreveUploader {
     );
 
     const uploads: Array<Promise<void>> = [];
-    this.uploaders.forEach((uploader) =>
-      uploads.push(taskQueue.enqueue(uploader))
-    );
+    this.uploaders.forEach((uploader) => {
+      if (uploader.status === "stop") {
+        uploads.push(taskQueue.enqueue(uploader));
+      }
+    });
 
     return Promise.all(uploads);
   }
