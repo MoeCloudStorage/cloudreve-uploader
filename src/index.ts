@@ -1,1 +1,3 @@
-export * from "./uploader";
+import CloudreveUploader from "./uploader";
+
+export default CloudreveUploader;
