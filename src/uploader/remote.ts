@@ -14,6 +14,7 @@ export default class Remote extends Base {
   private xhr?: XMLHttpRequest;
 
   cancel() {
+    this.status = "stop";
     this.cancelToken.cancel();
   }
 

@@ -11,6 +11,7 @@ export default class Local extends Base {
   private xhr?: XMLHttpRequest;
 
   cancel() {
+    this.status = "stop";
     // 终止上传
     this.xhr?.abort();
   }

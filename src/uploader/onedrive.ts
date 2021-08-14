@@ -29,6 +29,7 @@ export default class OneDrive extends Base {
   private localUploader?: Local;
 
   cancel(): void {
+    this.status = "stop";
     if (this.file?.size!! < 4 * MB) {
       // 小于 4MB 调用中转上传的 cancel
       this.localUploader?.cancel();

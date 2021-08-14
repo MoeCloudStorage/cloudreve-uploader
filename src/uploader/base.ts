@@ -48,6 +48,7 @@ export default abstract class Base {
   // 选择的文件
   // 注: (TODO) 多文件上传是创建多个 Uploader
   public file?: File;
+  public status: "stop" | "running" | "done" = "stop";
   protected options: Options;
   protected logger: Logger;
   protected progress: Progress = {
@@ -83,7 +84,12 @@ export default abstract class Base {
   }
 
   async check(): Promise<Base> {
-    check(this.file ?? null, this.options);
+    try {
+      check(this.file ?? null, this.options);
+    } catch (e) {
+      this.status = "stop";
+      throw e;
+    }
     return this;
   }
 
@@ -91,14 +97,17 @@ export default abstract class Base {
     this.onProgress = onProgress;
     this.onComplete = onComplete;
 
+    this.status = "running";
     try {
       await this.check();
       this.logger.info("Upload start", this.file);
       await this.start();
       this.logger.info("Upload complete", this.file);
+      this.status = "done";
       this.onComplete(this.id);
     } catch (err) {
       this.logger.error(err);
+      this.status = "stop";
       throw err;
     }
   };
